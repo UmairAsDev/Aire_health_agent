@@ -1,0 +1,24 @@
+{
+  "Medical Supplies": [
+    "Disposable",
+    "Instruments",
+    "Lab Supplies",
+    "Pharmaceuticals",
+    "Surgical Supplies"
+  ],
+  "Equipment": [
+    "Surgical",
+    "Consumables",
+    "Lab Supplies",
+    "Parts",
+    "Instruments"
+  ],
+  "Devices & Lasers": [
+    "Parts",
+    "Consumables",
+    "Surgical",
+    "Instruments",
+    "Lab Supplies"
+  ],
+  "Injectables": []
+}
