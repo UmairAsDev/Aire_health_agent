@@ -37,14 +37,11 @@ class ProductCategorizationAgent:
         workflow.add_node("retrieve_tax_categories", self.tools.retrieve_tax_categories)
         workflow.add_node(
             "generate_product_content", self.tools.generate_product_content
-        )  # Combines 4 calls
-        workflow.add_node(
-            "classify_product", self.tools.classify_product
-        )  # Combines 2 calls
+        )
+        workflow.add_node("classify_product", self.tools.classify_product)
 
         workflow.set_entry_point("retrieve_tax_categories")
 
-        # Optimized workflow: 3 nodes total (1 Qdrant + 2 LLM)
         workflow.add_edge("retrieve_tax_categories", "generate_product_content")
         workflow.add_edge("generate_product_content", "classify_product")
         workflow.add_edge("classify_product", END)
@@ -91,7 +88,6 @@ class ProductCategorizationAgent:
 
             final_state = await self.graph.ainvoke(initial_state)  # type:ignore
 
-            # Log processing steps (deduplicate to avoid showing accumulated steps)
             steps = final_state.get("processing_steps", [])
             unique_steps = []
             seen = set()
