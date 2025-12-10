@@ -5,7 +5,6 @@ import logging
 from app.service.routes import router
 from app.core.product_agent import shutdown_agent
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -17,19 +16,16 @@ async def lifespan(app: FastAPI):
     """
     Lifespan context manager for startup and shutdown events
     """
-    # Startup
     logger.info("Starting Aire Health AI Product Categorization API...")
     logger.info("Initializing agent and connections...")
 
     yield
 
-    # Shutdown
     logger.info("Shutting down Aire Health AI Product Categorization API...")
     await shutdown_agent()
     logger.info("Shutdown complete")
 
 
-# Create FastAPI app
 app = FastAPI(
     title="Aire Health AI - Product Categorization API",
     description="""
@@ -55,16 +51,14 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
 app.include_router(router)
 
 
