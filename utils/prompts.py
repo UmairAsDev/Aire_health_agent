@@ -1,6 +1,46 @@
 """
-LLM Prompts for Product Categorization Agent
+Prompts for the product categorization agent.
+Optimized for performance with combined LLM calls.
 """
+
+COMBINED_PRODUCT_CONTENT_PROMPT = """You are a product content generation expert. Generate ALL product content in a single response.
+
+Product Information:
+{product_info}
+
+Generate the following 4 components in JSON format:
+
+1. **name_pattern**: Standardized product name
+   - Format: [Brand] [Product Name] [Size] - [Key Specs]
+   - Example: "Allergan Botox Therapeutic 100 Units - Muscle Relaxant"
+
+2. **product_summary**: "About this Product" bullet-point format
+   - Start with "About this Product" header
+   - 6-10 detailed bullet points using "•"
+   - Focus on features, benefits, specifications
+   - DO NOT include price information
+   - Be consistent with format
+
+3. **product_description**: Paragraph + HTML table
+   - First: 2-4 sentence descriptive paragraph
+   - Then: Comprehensive HTML table with specifications
+   - Table specs: Brand, Type, Size, Material, Storage, Certifications, etc.
+   - Include 10-15+ rows for detailed products
+
+4. **keywords**: 15-30 short e-commerce keywords
+   - 1-3 words each
+   - User search perspective
+   - Include: brand, product type, features, use cases
+
+Return as JSON:
+{{
+  "name_pattern": "Brand Product Name - Size - Key Specs",
+  "product_summary": "About this Product\\n\\n• Bullet point 1\\n• Bullet point 2...",
+  "product_description": "Paragraph description...\\n\\n<table>...</table>",
+  "keywords": ["keyword1", "keyword2", ...]
+}}
+
+Return ONLY valid JSON, no markdown formatting."""
 
 NAME_PATTERN_PROMPT = """You are a product naming expert. Given the following product information, create a standardized product name pattern.
 
@@ -85,11 +125,6 @@ WHAT TO EXCLUDE:
 FORMAT:
 First the paragraph, then a blank line, then the HTML table.
 
-EXAMPLE OUTPUT:
-Botox® Therapeutic is a prescription medication containing Botulinum Toxin Type A, designed for therapeutic muscle relaxation treatments. This pharmaceutical-grade product is manufactured by Allergan and requires proper refrigeration to maintain efficacy. Each vial contains 100 units of onabotulinumtoxinA for precise dosing in clinical applications.
-
-<table><tr><th>Brand</th><td>Allergan</td></tr><tr><th>Product Type</th><td>Injectable Therapeutic</td></tr><tr><th>Active Ingredient</th><td>Botulinum Toxin Type A (onabotulinumtoxinA)</td></tr><tr><th>Strength</th><td>100 Units per Vial</td></tr><tr><th>Form</th><td>Lyophilized Powder for Injection</td></tr><tr><th>Storage</th><td>Refrigerate at 2-8°C</td></tr><tr><th>Shelf Life</th><td>36 months (unopened)</td></tr><tr><th>Reconstitution</th><td>Use within 24 hours</td></tr><tr><th>Classification</th><td>Prescription Muscle Relaxant</td></tr></table>
-
 Return the description paragraph followed by the HTML table."""
 
 
@@ -131,20 +166,7 @@ Keyword Categories to Include:
    - Problem solving (e.g., "allergy-free", "chemical resistant")
    - Benefits (e.g., "comfortable fit", "tactile sensitivity")
 
-EXAMPLES OF GOOD KEYWORDS:
-✓ "nitrile gloves"
-✓ "N95 respirator"
-✓ "powder-free"
-✓ "medical grade"
-✓ "3M VFlex"
-✓ "exam gloves"
-✓ "latex-free"
-✓ "disposable gloves"
 
-EXAMPLES OF BAD KEYWORDS (TOO LONG):
-✗ "gloves for medical professionals"
-✗ "NIOSH approved N95 respirator mask"
-✗ "powder-free nitrile examination gloves"
 
 Generate EXACTLY {keyword_count} keywords (between {min_count} and {max_count}).
 Each keyword should be searchable, meaningful, and 1-3 words only.
@@ -190,12 +212,7 @@ OUTPUT FORMAT - Return as JSON:
   "subcategories": ["Subcategory from the list", "Another subcategory"]
 }}
 
-EXAMPLES:
-- Botox Injectable → {{"main_category": "Injectables", "subcategories": []}}
-- N95 Respirator Mask → {{"main_category": "Medical Supplies", "subcategories": ["Disposable"]}}
-- Nitrile Exam Gloves → {{"main_category": "Medical Supplies", "subcategories": ["Disposable"]}}
-- Surgical Scissors → {{"main_category": "Equipment", "subcategories": ["Surgical", "Instruments"]}}
-- Laser Device → {{"main_category": "Devices & Lasers", "subcategories": ["Surgical"]}}
+
 
 Return ONLY valid JSON with main_category from the provided list and subcategories from that category's subcategory list."""
 
@@ -271,10 +288,74 @@ def get_keyword_extraction_prompt(
     )
 
 
+def get_combined_product_content_prompt(product_info: str) -> str:
+    """Get combined product content generation prompt"""
+    return COMBINED_PRODUCT_CONTENT_PROMPT.format(product_info=product_info)
+
+
 def get_category_matching_prompt(product_info: str, categories: str) -> str:
     """Get formatted category matching prompt"""
+    import json
+
     return CATEGORY_MATCHING_PROMPT.format(
-        product_info=product_info, categories=categories
+        product_info=product_info, categories=json.dumps(categories, indent=2)
+    )
+
+
+COMBINED_CLASSIFICATION_PROMPT = """You are a medical product classification expert. Classify this product by BOTH category and tax code in one response.
+
+Product Information:
+{product_info}
+
+Keywords:
+{keywords}
+
+Available Categories (MUST use these only):
+{categories}
+
+Retrieved Tax Categories:
+{tax_categories}
+
+Generate BOTH classifications:
+
+1. **CATEGORY CLASSIFICATION**:
+   - Select main_category from: "Medical Supplies", "Equipment", "Devices & Lasers", "Injectables"
+   - Select 0-3 subcategories from that category's list
+   - If no subcategories available, use empty array
+
+2. **TAX CODE SELECTION**:
+   - Select BEST match from Retrieved Tax Categories
+   - Be CONFIDENT - use 0.8+ if reasonable match
+   - Provide detailed reasoning
+
+Return as JSON:
+{{
+  "category": {{
+    "main_category": "One of the 4 main categories",
+    "subcategories": ["Sub1", "Sub2"]
+  }},
+  "tax_code": {{
+    "tax_code": "code_from_retrieved_list",
+    "tax_code_name": "exact name from tax category",
+    "confidence": 0.85,
+    "reasoning": "Detailed explanation of both category and tax code selection"
+  }}
+}}
+
+Return ONLY valid JSON, no markdown formatting."""
+
+
+def get_combined_classification_prompt(
+    product_info: str, keywords: list, categories: dict, tax_categories: list
+) -> str:
+    """Get combined classification prompt"""
+    import json
+
+    return COMBINED_CLASSIFICATION_PROMPT.format(
+        product_info=product_info,
+        keywords=", ".join(keywords),
+        categories=json.dumps(categories, indent=2),
+        tax_categories=json.dumps(tax_categories, indent=2),
     )
 
 

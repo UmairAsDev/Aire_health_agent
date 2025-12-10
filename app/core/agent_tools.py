@@ -17,6 +17,8 @@ from utils.prompts import (
     get_keyword_extraction_prompt,
     get_category_matching_prompt,
     get_tax_code_selection_prompt,
+    get_combined_product_content_prompt,
+    get_combined_classification_prompt,
 )
 from config.config import settings
 from app.core.agent_state import AgentState, TaxCodeResult
@@ -394,6 +396,188 @@ class ProductAgentTools:
             error_msg = f"Error suggesting tax code: {str(e)}"
             logger.error(error_msg)
             state["errors"].append(error_msg)
+            state["tax_code_result"] = TaxCodeResult(
+                tax_code="",
+                tax_code_name="",
+                confidence=0.0,
+                reasoning=f"Error: {str(e)}",
+            )
+
+        return state
+
+    # OPTIMIZED COMBINED METHODS
+
+    async def generate_product_content(self, state: AgentState) -> AgentState:
+        """
+        Generate ALL product content in one LLM call (OPTIMIZED).
+        Combines: name_pattern, product_summary, product_description, keywords
+        """
+        try:
+            logger.info("Generating all product content in one call...")
+
+            prompt = get_combined_product_content_prompt(
+                state["product_info_formatted"]
+            )
+
+            response = await self.openai_client.chat.completions.create(
+                model=settings.model_name,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a product content generation expert.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=settings.agent_temperature,
+                max_tokens=settings.agent_max_tokens * 2,  # Double for combined output
+                response_format={"type": "json_object"},
+            )
+
+            content_json = parse_llm_json_response(
+                response.choices[0].message.content
+            )  # type:ignore
+
+            if content_json:
+                # Extract all 4 components
+                state["name_pattern"] = content_json.get("name_pattern", "")
+                state["product_summary"] = content_json.get("product_summary", "")
+                state["product_description"] = content_json.get(
+                    "product_description", ""
+                )
+
+                # Process keywords
+                keywords = content_json.get("keywords", [])
+                if isinstance(keywords, list):
+                    keywords = clean_keywords(keywords)
+                    if not validate_keyword_count(
+                        keywords, settings.keyword_count_min, settings.keyword_count_max
+                    ):
+                        logger.warning(
+                            f"Keyword count {len(keywords)} outside range {settings.keyword_count_min}-{settings.keyword_count_max}"
+                        )
+                        if len(keywords) < settings.keyword_count_min:
+                            keywords.extend(
+                                [
+                                    f"keyword_{i}"
+                                    for i in range(
+                                        len(keywords), settings.keyword_count_min
+                                    )
+                                ]
+                            )
+                        elif len(keywords) > settings.keyword_count_max:
+                            keywords = keywords[: settings.keyword_count_max]
+
+                    state["keywords"] = keywords
+                else:
+                    raise ValueError("Keywords must be a list")
+
+                state["processing_steps"].append("Generated all product content")
+                logger.info("Generated all product content successfully")
+
+                # Track tokens
+                if hasattr(response, "usage") and response.usage:
+                    state["total_tokens"] += response.usage.total_tokens
+
+            else:
+                raise ValueError("Failed to parse product content JSON")
+
+        except Exception as e:
+            error_msg = f"Error generating product content: {str(e)}"
+            logger.error(error_msg)
+            state["errors"].append(error_msg)
+            # Set defaults
+            state["name_pattern"] = "Unknown Product"
+            state["product_summary"] = "Product information not available"
+            state["product_description"] = "Product information not available"
+            state["keywords"] = ["product"]
+
+        return state
+
+    async def classify_product(self, state: AgentState) -> AgentState:
+        """
+        Classify product by category AND tax code in one LLM call (OPTIMIZED).
+        Combines: category matching + tax code selection
+        """
+        try:
+            logger.info("Classifying product (category + tax code) in one call...")
+
+            # Get categories and tax categories
+            categories = get_category_hierarchy()
+            tax_categories = state.get("retrieved_tax_categories", [])
+
+            prompt = get_combined_classification_prompt(
+                state["product_info_formatted"],
+                state["keywords"],
+                categories,
+                tax_categories,
+            )
+
+            response = await self.openai_client.chat.completions.create(
+                model=settings.model_name,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a medical product classification expert.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=settings.agent_temperature,
+                max_tokens=settings.agent_max_tokens,
+                response_format={"type": "json_object"},
+            )
+
+            classification_json = parse_llm_json_response(
+                response.choices[0].message.content
+            )  # type:ignore
+
+            if classification_json:
+                # Extract category
+                if "category" in classification_json:
+                    category_data = classification_json["category"]
+                    state["category"] = {
+                        "main_category": category_data.get("main_category", ""),
+                        "subcategories": category_data.get("subcategories", []),
+                    }
+                    category_display = f"{category_data.get('main_category', '')} > {', '.join(category_data.get('subcategories', [])[:2])}"
+                    logger.info(f"Matched category: {category_display}")
+                else:
+                    raise ValueError("Missing category in response")
+
+                # Extract tax code
+                if "tax_code" in classification_json:
+                    tax_data = classification_json["tax_code"]
+                    state["tax_code_result"] = TaxCodeResult(
+                        tax_code=tax_data.get("tax_code", ""),
+                        tax_code_name=tax_data.get("tax_code_name", ""),
+                        confidence=tax_data.get("confidence", 0.0),
+                        reasoning=tax_data.get("reasoning", ""),
+                    )
+                    logger.info(
+                        f"Suggested tax code: {tax_data.get('tax_code', '')} (confidence: {tax_data.get('confidence', 0.0)})"
+                    )
+                else:
+                    raise ValueError("Missing tax_code in response")
+
+                state["processing_steps"].append(
+                    "Classified product (category + tax code)"
+                )
+
+                # Track tokens
+                if hasattr(response, "usage") and response.usage:
+                    state["total_tokens"] += response.usage.total_tokens
+
+            else:
+                raise ValueError("Failed to parse classification JSON")
+
+        except Exception as e:
+            error_msg = f"Error classifying product: {str(e)}"
+            logger.error(error_msg)
+            state["errors"].append(error_msg)
+            # Set defaults
+            state["category"] = {
+                "main_category": "Uncategorized",
+                "subcategories": ["General"],
+            }
             state["tax_code_result"] = TaxCodeResult(
                 tax_code="",
                 tax_code_name="",

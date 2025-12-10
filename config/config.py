@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     embedding_model: str = "text-embedding-ada-002"
     vector_size: int = 1536
-    model_name: str = "gpt-4o"
+    model_name: str = "gpt-4.1"
 
     agent_temperature: float = 0.3
     agent_max_tokens: int = 2000

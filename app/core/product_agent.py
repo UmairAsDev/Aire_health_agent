@@ -30,31 +30,24 @@ class ProductCategorizationAgent:
         self.graph = self._build_graph()
 
     def _build_graph(self) -> StateGraph:
-        """Build the LangGraph workflow"""
+        """Build the OPTIMIZED LangGraph workflow (2 LLM calls instead of 6)"""
 
         workflow = StateGraph(AgentState)
 
         workflow.add_node("retrieve_tax_categories", self.tools.retrieve_tax_categories)
-        workflow.add_node("generate_name_pattern", self.tools.generate_name_pattern)
         workflow.add_node(
-            "generate_product_summary", self.tools.generate_product_summary
-        )
+            "generate_product_content", self.tools.generate_product_content
+        )  # Combines 4 calls
         workflow.add_node(
-            "generate_product_description", self.tools.generate_product_description
-        )
-        workflow.add_node("extract_keywords", self.tools.extract_keywords)
-        workflow.add_node("match_category", self.tools.match_category)
-        workflow.add_node("suggest_tax_code", self.tools.suggest_tax_code)
+            "classify_product", self.tools.classify_product
+        )  # Combines 2 calls
 
         workflow.set_entry_point("retrieve_tax_categories")
 
-        workflow.add_edge("retrieve_tax_categories", "generate_name_pattern")
-        workflow.add_edge("generate_name_pattern", "generate_product_summary")
-        workflow.add_edge("generate_product_summary", "generate_product_description")
-        workflow.add_edge("generate_product_description", "extract_keywords")
-        workflow.add_edge("extract_keywords", "match_category")
-        workflow.add_edge("match_category", "suggest_tax_code")
-        workflow.add_edge("suggest_tax_code", END)
+        # Optimized workflow: 3 nodes total (1 Qdrant + 2 LLM)
+        workflow.add_edge("retrieve_tax_categories", "generate_product_content")
+        workflow.add_edge("generate_product_content", "classify_product")
+        workflow.add_edge("classify_product", END)
 
         return workflow.compile()  # type:ignore
 
