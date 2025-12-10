@@ -20,7 +20,7 @@ Example: "3M VFlex N95 Medical Respirator Mask - One Size - 50/Box - NIOSH Appro
 Return ONLY the formatted name pattern, nothing else."""
 
 
-PRODUCT_SUMMARY_PROMPT = """You are a product documentation specialist. Create a product summary in "About this Product" format with bullet points.
+PRODUCT_SUMMARY_PROMPT = """You are a product documentation specialist. Create a comprehensive product summary in "About this Product" format with bullet points.
 
 Product Information:
 {product_info}
@@ -28,20 +28,24 @@ Product Information:
 Guidelines:
 - Start with "About this Product" as the header
 - Add a blank line after the header
-- Create 4-6 bullet points using the "•" symbol
-- Each bullet point should highlight key features, benefits, or specifications
+- Create 6-10 bullet points using the "•" symbol
+- Each bullet point should highlight key features, benefits, specifications, or use cases
 - Extract information from FEATURES_AND_BENEFITS fields and product description
-- Make bullet points concise and informative
+- Make bullet points detailed and informative (1-2 sentences each when appropriate)
 - Focus on what makes the product unique and valuable
+- Include brand name, product type, certifications, materials, and key specifications
+- DO NOT include price information in the summary
+- Think about what information would be most valuable to potential buyers
 
 Example format:
 About this Product
 
-• McKesson Confiderm® 3.5C Nitrile Exam Gloves Small
-• Powder-Free
-• Tested for use with Chemotherapy Drugs using ASTM D6978-05
-• Textured fingertips provide excellent tactile sensitivity and dexterity
-• Improved conformability provides superior fit and extended wear comfort
+• McKesson Confiderm® 3.5C Nitrile Exam Gloves are designed for healthcare professionals requiring superior protection and comfort
+• Powder-Free formulation reduces the risk of allergic reactions and contamination
+• Tested for use with Chemotherapy Drugs using ASTM D6978-05 standard, making them suitable for oncology settings
+• Textured fingertips provide excellent tactile sensitivity and dexterity for precise medical procedures
+• Improved conformability provides superior fit and extended wear comfort during long shifts
+• Beaded cuff design prevents roll-down and makes donning easier
 
 Return ONLY the formatted text with bullet points, nothing else."""
 
@@ -67,23 +71,61 @@ Example format:
 Return ONLY the HTML table, nothing else."""
 
 
-KEYWORD_EXTRACTION_PROMPT = """You are a product SEO and categorization expert. Generate exactly {keyword_count} relevant keywords for the following product.
+KEYWORD_EXTRACTION_PROMPT = """You are an e-commerce SEO expert. Generate {keyword_count} SHORT, MEANINGFUL keywords for product search and discovery.
 
 Product Information:
 {product_info}
 
-Guidelines for keyword generation:
-1. Include product type and category keywords
-2. Include brand and manufacturer keywords
-3. Include technical specifications and features
-4. Include use case and application keywords
-5. Include industry-specific terminology
-6. Mix of broad and specific terms
-7. Include common search terms users might use
-8. Avoid duplicates and very similar terms
-9. Also generate the keywords of the the brand name.
+CRITICAL RULES:
+- Each keyword must be 1-3 WORDS MAXIMUM (e.g., "nitrile gloves", "N95 mask", "powder-free")
+- NO full sentences or long phrases
+- Each word must have search value and meaning
+- Think like a customer typing into a search box
+
+Keyword Categories to Include:
+
+1. **Brand & Manufacturer** (1-2 words)
+   - Brand name (e.g., "3M", "McKesson")
+   - Product line (e.g., "VFlex", "Confiderm")
+
+2. **Product Type** (1-3 words)
+   - Generic terms (e.g., "gloves", "mask", "respirator")
+   - Specific types (e.g., "exam gloves", "surgical mask", "nitrile gloves")
+
+3. **Key Features** (1-2 words)
+   - Material (e.g., "nitrile", "latex-free")
+   - Properties (e.g., "powder-free", "textured", "disposable")
+   - Size (e.g., "small", "medium", "one-size")
+
+4. **Certifications** (1-3 words)
+   - Standards (e.g., "N95", "ASTM F1862", "FDA cleared")
+   - Ratings (e.g., "medical grade", "NIOSH approved")
+
+5. **Use Case** (1-3 words)
+   - Application (e.g., "medical gloves", "surgical gloves", "exam gloves")
+   - Setting (e.g., "healthcare", "dental", "laboratory")
+
+6. **User Intent** (1-3 words)
+   - Problem solving (e.g., "allergy-free", "chemical resistant")
+   - Benefits (e.g., "comfortable fit", "tactile sensitivity")
+
+EXAMPLES OF GOOD KEYWORDS:
+✓ "nitrile gloves"
+✓ "N95 respirator"
+✓ "powder-free"
+✓ "medical grade"
+✓ "3M VFlex"
+✓ "exam gloves"
+✓ "latex-free"
+✓ "disposable gloves"
+
+EXAMPLES OF BAD KEYWORDS (TOO LONG):
+✗ "gloves for medical professionals"
+✗ "NIOSH approved N95 respirator mask"
+✗ "powder-free nitrile examination gloves"
 
 Generate EXACTLY {keyword_count} keywords (between {min_count} and {max_count}).
+Each keyword should be searchable, meaningful, and 1-3 words only.
 
 Return as a JSON array:
 {{

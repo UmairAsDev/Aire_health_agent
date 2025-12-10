@@ -64,7 +64,7 @@ class ProductAnalysisResponse(BaseModel):
         ..., description="Product description as HTML table with product details"
     )
     keywords: List[str] = Field(
-        ..., description="15-20 relevant keywords", min_length=15, max_length=20
+        ..., description="15-30 relevant keywords", min_length=15, max_length=30
     )
     category: str = Field(
         ..., description="Product category in 'Main > Subcategory' format"

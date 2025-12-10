@@ -6,14 +6,13 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     embedding_model: str = "text-embedding-ada-002"
     vector_size: int = 1536
-    model_name: str = "gpt-4o"  
-
+    model_name: str = "gpt-4o"
 
     agent_temperature: float = 0.3
     agent_max_tokens: int = 2000
-    retrieval_top_k: int = 5  
+    retrieval_top_k: int = 5
     keyword_count_min: int = 15
-    keyword_count_max: int = 20
+    keyword_count_max: int = 30
     DATABASE_NAME: str
     HOST: str
     PORT: str
