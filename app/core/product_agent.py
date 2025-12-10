@@ -84,16 +84,17 @@ class ProductCategorizationAgent:
                 "product_summary": "",
                 "product_description": "",
                 "keywords": [],
-                "category": "",
+                "category": {"main_category": "", "subcategories": []},
                 "tax_code_result": {
                     "tax_code": "",
                     "tax_code_name": "",
                     "confidence": 0.0,
                     "reasoning": "",
                 },
+                "total_tokens": 0,
                 "errors": [],
                 "processing_steps": [],
-            }
+            }  # type:ignore
 
             final_state = await self.graph.ainvoke(initial_state)  # type:ignore
 
@@ -121,7 +122,8 @@ class ProductCategorizationAgent:
                 "tax_code_name": final_state["tax_code_result"]["tax_code_name"],
                 "tax_code_confidence": final_state["tax_code_result"]["confidence"],
                 "tax_code_reasoning": final_state["tax_code_result"]["reasoning"],
-            }
+                "total_tokens": final_state["total_tokens"],
+            }  # type:ignore
 
             logger.info(
                 f"Product analysis complete for: {product_data.get('Item Num', 'Unknown')}"

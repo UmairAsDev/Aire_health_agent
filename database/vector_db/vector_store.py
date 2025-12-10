@@ -109,7 +109,7 @@ class QdrantVectorStore:
                 print(f"Error processing batch {i}: {e}")
 
     async def search(
-        self, collection_name: str, query: str, top_k: int = 5
+        self, collection_name: str, query: str, top_k: int = 10
     ) -> List[Dict[str, Any]]:
         """
         Embeds query and searches Qdrant.
@@ -128,7 +128,7 @@ class QdrantVectorStore:
             )
 
             results = [hit.payload for hit in search_result.points]  # type:ignore
-            return results #type:ignore
+            return results  # type:ignore
 
         except Exception as e:
             print(f"Search error in {collection_name}: {e}")

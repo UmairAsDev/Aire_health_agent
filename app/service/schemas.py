@@ -66,21 +66,31 @@ class ProductInput(BaseModel):
         }
 
 
+class CategoryInfo(BaseModel):
+    """Category information with main category and subcategories"""
+
+    main_category: str = Field(..., description="Main medical category")
+    subcategories: List[str] = Field(
+        ..., description="List of relevant subcategories", min_length=0, max_length=5
+    )
+
+
 class ProductAnalysisResponse(BaseModel):
-    """Complete product analysis response"""
+    """Response schema for product analysis"""
 
     name_pattern: str = Field(..., description="Standardized product name pattern")
     product_summary: str = Field(
         ..., description="Product summary in 'About this Product' bullet-point format"
     )
     product_description: str = Field(
-        ..., description="Product description as HTML table with product details"
+        ...,
+        description="Product description paragraph followed by HTML table with specifications",
     )
     keywords: List[str] = Field(
         ..., description="15-30 relevant keywords", min_length=15, max_length=30
     )
-    category: str = Field(
-        ..., description="Product category in 'Main > Subcategory' format"
+    category: CategoryInfo = Field(
+        ..., description="Product category with main category and subcategories"
     )
     tax_code: str = Field(..., description="Suggested tax code")
     tax_code_name: str = Field(..., description="Tax code name")
@@ -90,38 +100,31 @@ class ProductAnalysisResponse(BaseModel):
     tax_code_reasoning: str = Field(
         ..., description="Explanation for tax code selection"
     )
+    processing_time_seconds: float = Field(
+        ..., description="Total API processing time in seconds"
+    )
+    total_tokens: int = Field(..., description="Total tokens used across all LLM calls")
 
     class Config:
         json_schema_extra = {
             "example": {
-                "name_pattern": "3M VFlex N95 Medical Respirator Mask - One Size - 50/Box - NIOSH Approved",
-                "product_summary": "About this Product\n\n• McKesson Confiderm® 3.5C Nitrile Exam Gloves Small\n• Powder-Free\n• Tested for use with Chemotherapy Drugs using ASTM D6978-05. Gloves used for protection against chemotherapy drug exposure must be selected specifically for the type of glove being used.\n• Textured fingertips provide excellent tactile sensitivity and dexterity.\n• Improved conformability provides superior fit and extended wear comfort.",
-                "product_description": "<table><tr><th>Brand</th><td>McKesson</td></tr><tr><th>Powder-Free</th><td>Yes</td></tr><tr><th>Size</th><td>Small - 9.6 in</td></tr><tr><th>Cuff</th><td>Beaded</td></tr><tr><th>Fingertips</th><td>Textured</td></tr></table>",
+                "name_pattern": "Allergan Botox Therapeutic 100 Units - Muscle Relaxant",
+                "product_summary": "About this Product\n\n• Botox® Therapeutic...",
+                "product_description": "Botox® Therapeutic is a prescription medication...\n\n<table>...</table>",
                 "keywords": [
-                    "N95 respirator",
-                    "surgical mask",
-                    "3M VFlex",
-                    "NIOSH approved",
-                    "FDA cleared",
-                    "medical mask",
-                    "particulate respirator",
-                    "fluid resistant",
-                    "healthcare PPE",
-                    "disposable mask",
-                    "elastic strap",
-                    "ASTM F1862",
-                    "airborne protection",
-                    "one size fits most",
-                    "hospital mask",
-                    "medical supplies",
-                    "respiratory protection",
-                    "surgical PPE",
+                    "Botox",
+                    "Allergan",
                 ],
-                "category": "Medical Supplies > Disposable",
+                "category": {
+                    "main_category": "Injectables",
+                    "subcategories": [],
+                },
                 "tax_code": "51020",
                 "tax_code_name": "Prescription Drugs",
-                "tax_code_confidence": 0.45,
+                "tax_code_confidence": 0.85,
                 "tax_code_reasoning": "Medical supplies often fall under similar tax treatment as prescription medical items.",
+                "processing_time_seconds": 8.45,
+                "total_tokens": 3250,
             }
         }
 

@@ -36,6 +36,9 @@ async def analyze_product(product: ProductInput):
     - tax_code: Suggested tax code with confidence
     """
     try:
+        import time
+
+        start_time = time.time()
         logger.info(f"Received product analysis request for Item: {product.Item_Num}")
 
         product_data = product.model_dump(
@@ -46,19 +49,29 @@ async def analyze_product(product: ProductInput):
 
         result = await agent.analyze_product(product_data)
 
+        # Calculate processing time
+        processing_time = time.time() - start_time
+
+        # Import CategoryInfo for response construction
+        from app.service.schemas import CategoryInfo
+
         response = ProductAnalysisResponse(
             name_pattern=result["name_pattern"],
             product_summary=result["product_summary"],
             product_description=result["product_description"],
             keywords=result["keywords"],
-            category=result["category"],
+            category=CategoryInfo(**result["category"]),  # Convert dict to CategoryInfo
             tax_code=result["tax_code"],
             tax_code_name=result["tax_code_name"],
             tax_code_confidence=result["tax_code_confidence"],
             tax_code_reasoning=result["tax_code_reasoning"],
+            processing_time_seconds=round(processing_time, 2),
+            total_tokens=result.get("total_tokens", 0),
         )
 
-        logger.info(f"Successfully analyzed product: {product.Item_Num}")
+        logger.info(
+            f"Successfully analyzed product: {product.Item_Num} in {processing_time:.2f}s"
+        )
         return response
 
     except Exception as e:

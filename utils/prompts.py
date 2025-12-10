@@ -43,25 +43,54 @@ Guidelines:
 Return ONLY the formatted text with bullet points, nothing else."""
 
 
-PRODUCT_DESCRIPTION_PROMPT = """You are a product documentation specialist. Create an HTML table showing product details.
+PRODUCT_DESCRIPTION_PROMPT = """You are an e-commerce product content specialist. Create a COMPREHENSIVE product description with TWO parts: a descriptive paragraph and a detailed specification table.
 
 Product Information:
 {product_info}
 
-Guidelines:
-- Create a clean HTML table with product specifications
+PART 1: PRODUCT DESCRIPTION PARAGRAPH
+- Write 2-4 sentences describing the product
+- Focus on key benefits, uses, and what makes it unique
+- Use professional, engaging language suitable for e-commerce
+- Highlight medical/therapeutic applications if applicable
+
+PART 2: SPECIFICATION TABLE
+- Create a detailed HTML table with ALL relevant product specifications
+- Include as many specifications as available (10-15+ rows is fine for complex products)
 - Use <table>, <tr>, <th>, and <td> tags
-- Each row should have a specification name in <th> and value in <td>
-- Include key specifications like: Brand, Size, Material, Color, Packaging, Certifications, etc.
-- Extract values from the product information provided
-- Keep it concise - include only the most important specifications (5-8 rows)
-- Do NOT include any markdown formatting or code blocks
-- Return ONLY the HTML table, no explanatory text
 
-Example format:
-<table><tr><th>Brand</th><td>McKesson</td></tr><tr><th>Powder-Free</th><td>Yes</td></tr><tr><th>Size</th><td>Small - 9.6 in</td></tr><tr><th>Cuff</th><td>Beaded</td></tr><tr><th>Fingertips</th><td>Textured</td></tr></table>
+SPECIFICATIONS TO INCLUDE (if available):
+- Brand/Manufacturer
+- Product Type/Form
+- Size/Dimensions/Quantity
+- Material/Composition
+- Active Ingredients (for pharmaceuticals)
+- Strength/Dosage (for medications)
+- Color/Appearance
+- Packaging Details
+- Storage Requirements
+- Certifications/Standards (FDA, NIOSH, etc.)
+- Special Features
+- Intended Use/Application
+- Sterility Status
+- Shelf Life
+- Any other relevant medical/technical specifications
 
-Return ONLY the HTML table, nothing else."""
+WHAT TO EXCLUDE:
+- Catalog numbers
+- Vendor codes
+- Unit of measure (UOM)
+- Price information
+
+FORMAT:
+First the paragraph, then a blank line, then the HTML table.
+
+EXAMPLE OUTPUT:
+Botox® Therapeutic is a prescription medication containing Botulinum Toxin Type A, designed for therapeutic muscle relaxation treatments. This pharmaceutical-grade product is manufactured by Allergan and requires proper refrigeration to maintain efficacy. Each vial contains 100 units of onabotulinumtoxinA for precise dosing in clinical applications.
+
+<table><tr><th>Brand</th><td>Allergan</td></tr><tr><th>Product Type</th><td>Injectable Therapeutic</td></tr><tr><th>Active Ingredient</th><td>Botulinum Toxin Type A (onabotulinumtoxinA)</td></tr><tr><th>Strength</th><td>100 Units per Vial</td></tr><tr><th>Form</th><td>Lyophilized Powder for Injection</td></tr><tr><th>Storage</th><td>Refrigerate at 2-8°C</td></tr><tr><th>Shelf Life</th><td>36 months (unopened)</td></tr><tr><th>Reconstitution</th><td>Use within 24 hours</td></tr><tr><th>Classification</th><td>Prescription Muscle Relaxant</td></tr></table>
+
+Return the description paragraph followed by the HTML table."""
 
 
 KEYWORD_EXTRACTION_PROMPT = """You are an e-commerce SEO expert. Generate {keyword_count} SHORT, MEANINGFUL keywords for product search and discovery.
@@ -128,32 +157,50 @@ Return as a JSON array:
 Return ONLY valid JSON, no markdown formatting."""
 
 
-CATEGORY_MATCHING_PROMPT = """You are a product categorization expert. Match the following product to the most appropriate category.
+CATEGORY_MATCHING_PROMPT = """You are a medical product categorization expert. Match the product to categories from the AVAILABLE CATEGORIES ONLY.
 
 Product Information:
 {product_info}
 
-Available Categories:
+Available Categories (YOU MUST USE THESE ONLY):
 {categories}
 
-Instructions:
-1. Analyze the product type, description, and features
-2. Match to the most appropriate main category
-3. Select the most relevant subcategory
-4. Return in format: "Main Category > Subcategory"
+CRITICAL RULES:
+1. **ONLY use categories from the Available Categories list above**
+2. **DO NOT create new categories** - select from the provided list
+3. Select the MAIN CATEGORY that best fits the product
+4. Select 1-3 SUBCATEGORIES from that main category's subcategory list
+5. If the main category has no subcategories (empty list), use an empty subcategories array
 
-If no perfect match exists, choose the closest category.
+MEDICAL CATEGORIZATION APPROACH:
+- **Medical Supplies**: Disposable items, general medical supplies, pharmaceuticals, surgical supplies
+- **Equipment**: Surgical equipment, instruments, lab equipment, parts
+- **Devices & Lasers**: Medical devices, laser equipment, surgical devices
+- **Injectables**: Injectable medications, biologics, therapeutic injectables
 
-Return as JSON:
+SELECTION PROCESS:
+1. Analyze the product's primary medical function
+2. Match to ONE main category from: "Medical Supplies", "Equipment", "Devices & Lasers", or "Injectables"
+3. Select 1-3 relevant subcategories from that category's list
+4. If no subcategories are available, return empty array
+
+OUTPUT FORMAT - Return as JSON:
 {{
-  "category": "Main Category > Subcategory",
-  "reasoning": "Brief explanation of why this category was chosen"
+  "main_category": "One of the provided main categories",
+  "subcategories": ["Subcategory from the list", "Another subcategory"]
 }}
 
-Return ONLY valid JSON, no markdown formatting."""
+EXAMPLES:
+- Botox Injectable → {{"main_category": "Injectables", "subcategories": []}}
+- N95 Respirator Mask → {{"main_category": "Medical Supplies", "subcategories": ["Disposable"]}}
+- Nitrile Exam Gloves → {{"main_category": "Medical Supplies", "subcategories": ["Disposable"]}}
+- Surgical Scissors → {{"main_category": "Equipment", "subcategories": ["Surgical", "Instruments"]}}
+- Laser Device → {{"main_category": "Devices & Lasers", "subcategories": ["Surgical"]}}
+
+Return ONLY valid JSON with main_category from the provided list and subcategories from that category's subcategory list."""
 
 
-TAX_CODE_SELECTION_PROMPT = """You are a tax classification expert specializing in medical and pharmaceutical products. Select the MOST ACCURATE tax code for the following product.
+TAX_CODE_SELECTION_PROMPT = """You are a tax classification expert specializing in medical and pharmaceutical products. Select the MOST ACCURATE tax code from the retrieved categories.
 
 Product Information:
 {product_info}
@@ -162,26 +209,36 @@ Retrieved Tax Categories (from database):
 {tax_categories}
 
 CRITICAL INSTRUCTIONS:
-1. These products are primarily MEDICAL and PHARMACEUTICAL items from dermatology and healthcare departments
-2. Analyze the product description, features, and intended use carefully
-3. Match the product to the tax category that BEST describes its primary function and classification
-4. Consider:
-   - Is it a medical device, pharmaceutical, or medical supply?
-   - What is its primary medical use?
-   - Does it require FDA approval or medical certification?
-   - Is it prescription or over-the-counter?
-   - Is it a diagnostic tool, treatment device, or protective equipment?
+1. **ONLY select from the Retrieved Tax Categories above** - these are the ONLY valid options
+2. **Choose the BEST MATCH** from the retrieved list - there must be one that fits
+3. **Be CONFIDENT** - if there's a reasonable match, use confidence 0.8 or higher
+4. **Medical Product Focus**: These are medical/pharmaceutical products from healthcare settings
 
-5. Select the tax code with the HIGHEST relevance to the product's actual classification
-6. Provide a confidence score (0.0 to 1.0) - only use high confidence (0.8+) if you're certain
-7. If no perfect match exists, choose the closest category and explain why in reasoning
+SELECTION CRITERIA (in priority order):
+1. **Exact Product Match**: Does the tax category description exactly match this product type?
+2. **Medical Classification**: Does it match the medical/pharmaceutical classification?
+3. **Regulatory Category**: Does it align with FDA/medical device classification?
+4. **Therapeutic Use**: Does it match the therapeutic or clinical application?
+5. **Closest Alternative**: If no perfect match, which category is closest?
+
+CONFIDENCE SCORING:
+- **0.9-1.0**: Perfect or near-perfect match (exact product type in description)
+- **0.8-0.89**: Strong match (same medical category, similar use)
+- **0.7-0.79**: Good match (related category, reasonable fit)
+- **0.6-0.69**: Acceptable match (general category applies)
+- **Below 0.6**: Only if truly no good match exists
+
+IMPORTANT:
+- **Be decisive** - select the best available option with appropriate confidence
+- **Use high confidence** when the match is clear
+- **Explain your reasoning** clearly, referencing specific aspects of the product and tax category
 
 Return as JSON:
 {{
-  "tax_code": "selected_tax_code",
-  "tax_code_name": "name of the tax category",
+  "tax_code": "selected_tax_code_from_retrieved_list",
+  "tax_code_name": "exact name from the tax category",
   "confidence": 0.85,
-  "reasoning": "Detailed explanation of why this tax code was selected, including the product's primary classification and how it matches the tax category"
+  "reasoning": "Detailed explanation: This product is [product type] which matches tax category [code] because [specific reasons]. The confidence is [level] because [justification]."
 }}
 
 Return ONLY valid JSON, no markdown formatting."""

@@ -83,6 +83,10 @@ class ProductAgentTools:
             state["name_pattern"] = name_pattern
             state["processing_steps"].append("Generated name pattern")
 
+            # Track tokens
+            if hasattr(response, "usage") and response.usage:
+                state["total_tokens"] += response.usage.total_tokens
+
             logger.info(f"Generated name pattern: {name_pattern}")
 
         except Exception as e:
@@ -118,8 +122,12 @@ class ProductAgentTools:
             product_summary = response.choices[0].message.content
             if product_summary:
                 state["product_summary"] = product_summary.strip()
-                state["processing_steps"].append("Generated product summary")
-                logger.info("Generated product summary")
+            state["processing_steps"].append("Generated product summary")
+            logger.info("Generated product summary")
+
+            # Track tokens
+            if hasattr(response, "usage") and response.usage:
+                state["total_tokens"] += response.usage.total_tokens
             else:
                 raise ValueError("Failed to generate product summary")
 
@@ -156,8 +164,12 @@ class ProductAgentTools:
             product_description = response.choices[0].message.content
             if product_description:
                 state["product_description"] = product_description.strip()
-                state["processing_steps"].append("Generated product description")
-                logger.info("Generated product description")
+            state["processing_steps"].append("Generated product description")
+            logger.info("Generated product description")
+
+            # Track tokens
+            if hasattr(response, "usage") and response.usage:
+                state["total_tokens"] += response.usage.total_tokens
             else:
                 raise ValueError("Failed to generate product description")
 
@@ -230,6 +242,10 @@ class ProductAgentTools:
                 state["keywords"] = keywords
                 state["processing_steps"].append(f"Extracted {len(keywords)} keywords")
                 logger.info(f"Extracted {len(keywords)} keywords")
+
+                # Track tokens
+                if hasattr(response, "usage") and response.usage:
+                    state["total_tokens"] += response.usage.total_tokens
             else:
                 raise ValueError("Failed to parse keywords JSON")
 
@@ -275,20 +291,37 @@ class ProductAgentTools:
                 response.choices[0].message.content
             )  # type:ignore
 
-            if category_json and "category" in category_json:
-                state["category"] = category_json["category"]
+            if (
+                category_json
+                and "main_category" in category_json
+                and "subcategories" in category_json
+            ):
+                state["category"] = {
+                    "main_category": category_json["main_category"],
+                    "subcategories": category_json["subcategories"],
+                }
+                category_display = f"{category_json['main_category']} > {', '.join(category_json['subcategories'][:2])}"
                 state["processing_steps"].append(
-                    f"Matched category: {category_json['category']}"
+                    f"Matched category: {category_display}"
                 )
-                logger.info(f"Matched category: {category_json['category']}")
+                logger.info(f"Matched category: {category_display}")
+
+                # Track tokens
+                if hasattr(response, "usage") and response.usage:
+                    state["total_tokens"] += response.usage.total_tokens
             else:
-                raise ValueError("Failed to parse category JSON")
+                raise ValueError(
+                    "Failed to parse category JSON - missing main_category or subcategories"
+                )
 
         except Exception as e:
             error_msg = f"Error matching category: {str(e)}"
             logger.error(error_msg)
             state["errors"].append(error_msg)
-            state["category"] = "Uncategorized"
+            state["category"] = {
+                "main_category": "Uncategorized",
+                "subcategories": ["General"],
+            }
 
         return state
 
@@ -345,11 +378,15 @@ class ProductAgentTools:
                     reasoning=tax_json.get("reasoning", ""),
                 )
                 state["processing_steps"].append(
-                    f"Suggested tax code: {tax_json.get('tax_code')}"
+                    f"Suggested tax code: {tax_json.get('tax_code', '')}"
                 )
                 logger.info(
-                    f"Suggested tax code: {tax_json.get('tax_code')} (confidence: {tax_json.get('confidence')})"
+                    f"Suggested tax code: {tax_json.get('tax_code', '')} (confidence: {tax_json.get('confidence', 0.0)})"
                 )
+
+                # Track tokens
+                if hasattr(response, "usage") and response.usage:
+                    state["total_tokens"] += response.usage.total_tokens
             else:
                 raise ValueError("Failed to parse tax code JSON")
 
