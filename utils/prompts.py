@@ -11,7 +11,7 @@ Extract and format the following components:
 1. Brand name (from vendor information)
 2. Product name (main product identifier)
 3. Size/dimensions (measurements, quantities)
-4. Key specifications (1-2 most important features)
+4. Key specifications (3-4 most important features)
 
 Format the name pattern as: [Brand] [Product Name] [Size] - [Key Specs]
 
@@ -81,6 +81,7 @@ Guidelines for keyword generation:
 6. Mix of broad and specific terms
 7. Include common search terms users might use
 8. Avoid duplicates and very similar terms
+9. Also generate the keywords of the the brand name.
 
 Generate EXACTLY {keyword_count} keywords (between {min_count} and {max_count}).
 
@@ -165,7 +166,7 @@ def get_product_description_prompt(product_info: str) -> str:
 
 
 def get_keyword_extraction_prompt(
-    product_info: str, keyword_count: int = 18, min_count: int = 15, max_count: int = 20
+    product_info: str, keyword_count: int = 18, min_count: int = 15, max_count: int = 30
 ) -> str:
     """Get formatted keyword extraction prompt"""
     return KEYWORD_EXTRACTION_PROMPT.format(
