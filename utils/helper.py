@@ -19,10 +19,15 @@ def load_product_categories(file_path: str) -> Dict[str, List[str]]:
 
 def extract_brand_name(product_data: Dict[str, Any]) -> str:
     """Extract brand name from product data"""
-    brand = product_data.get("Vendor Name", "")
-    if not brand:
-        brand = product_data.get("Vendor Abbreviation", "")
-    return brand.strip()
+    # Try both field name formats
+    brand = (
+        product_data.get("Vendor Name")
+        or product_data.get("Vendor_Name")
+        or product_data.get("Vendor Abbreviation")
+        or product_data.get("Vendor_Abbreviation")
+        or ""
+    )
+    return brand.strip() if brand else ""
 
 
 def extract_size_dimensions(product_data: Dict[str, Any]) -> str:
@@ -32,7 +37,6 @@ def extract_size_dimensions(product_data: Dict[str, Any]) -> str:
     uom = product_data.get("UOM", "")
     if uom:
         size_parts.append(uom)
-
 
     desc_short = product_data.get("Item Desc Short", "")
     desc_full = product_data.get("Item Desc Full", "")
@@ -48,16 +52,13 @@ def extract_size_dimensions(product_data: Dict[str, Any]) -> str:
         matches = re.findall(pattern, desc_short + " " + desc_full, re.IGNORECASE)
         size_parts.extend(matches[:2])
 
-    return " ".join(
-        dict.fromkeys(size_parts)
-    )  
+    return " ".join(dict.fromkeys(size_parts))
 
 
 def parse_specifications(product_data: Dict[str, Any]) -> List[str]:
     """Parse specifications from features and benefits"""
     specs = []
 
-    
     for i in range(1, 20):
         feature_key = f"FEATURES_AND_BENEFITS_{i}"
         feature = product_data.get(feature_key)
@@ -71,30 +72,57 @@ def format_product_for_llm(product_data: Dict[str, Any]) -> str:
     """Format product data for LLM prompt"""
     parts = []
 
-   
-    if product_data.get("Vendor Name"):
-        parts.append(f"Vendor: {product_data['Vendor Name']}")
+    # Helper function to get field value (handles both "Field Name" and "Field_Name")
+    def get_field(field_name: str) -> Optional[str]:
+        # Try with spaces first
+        value = product_data.get(field_name)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+        # Try with underscores
+        value = product_data.get(field_name.replace(" ", "_"))
+        if value is not None and str(value).strip():
+            return str(value).strip()
+        return None
 
-    if product_data.get("Item Desc Short"):
-        parts.append(f"Short Description: {product_data['Item Desc Short']}")
+    # Vendor information
+    vendor = get_field("Vendor Name") or get_field("Vendor_Name")
+    if vendor:
+        parts.append(f"Vendor: {vendor}")
 
-    if product_data.get("Item Desc Full"):
-        parts.append(f"Full Description: {product_data['Item Desc Full']}")
+    # Product descriptions
+    desc_short = get_field("Item Desc Short") or get_field("Item_Desc_Short")
+    if desc_short:
+        parts.append(f"Short Description: {desc_short}")
 
-    if product_data.get("Structure Group"):
-        parts.append(f"Product Group: {product_data['Structure Group']}")
+    desc_full = get_field("Item Desc Full") or get_field("Item_Desc_Full")
+    if desc_full:
+        parts.append(f"Full Description: {desc_full}")
 
-    if product_data.get("UOM"):
-        parts.append(f"Unit of Measure: {product_data['UOM']}")
+    # Product group
+    group = get_field("Structure Group") or get_field("Structure_Group")
+    if group:
+        parts.append(f"Product Group: {group}")
 
-    if product_data.get("Price"):
-        parts.append(f"Price: {product_data['Price']}")
+    # Catalog number
+    catalog = get_field("Catalog Num") or get_field("Catalog_Num")
+    if catalog:
+        parts.append(f"Catalog Number: {catalog}")
 
+    # Unit of measure
+    uom = get_field("UOM")
+    if uom:
+        parts.append(f"Unit of Measure: {uom}")
+
+    # Features and benefits
     features = parse_specifications(product_data)
     if features:
         parts.append(f"\nFeatures and Benefits:")
-        for i, feature in enumerate(features[:10], 1): 
+        for i, feature in enumerate(features[:10], 1):  # Limit to 10 features
             parts.append(f"  {i}. {feature}")
+
+    # If no meaningful data was found, return a minimal description
+    if not parts:
+        parts.append("Product information not available")
 
     return "\n".join(parts)
 
@@ -120,7 +148,6 @@ def format_name_pattern(brand: str, product: str, size: str, specs: List[str]) -
     if size:
         parts.append(size)
 
-
     if specs:
         key_specs = " - ".join(specs[:2])
         parts.append(key_specs)
@@ -131,7 +158,7 @@ def format_name_pattern(brand: str, product: str, size: str, specs: List[str]) -
 def parse_llm_json_response(response_text: str) -> Optional[Dict[str, Any]]:
     """Parse JSON from LLM response, handling markdown code blocks"""
     try:
-        
+
         cleaned = response_text.strip()
         if cleaned.startswith("```json"):
             cleaned = cleaned[7:]
@@ -171,12 +198,11 @@ def clean_keywords(keywords: List[str]) -> List[str]:
     for kw in keywords:
         kw_clean = kw.strip().lower()
 
-
         if not kw_clean or kw_clean in seen:
             continue
 
         seen.add(kw_clean)
-        cleaned.append(kw.strip())  
+        cleaned.append(kw.strip())
 
     return cleaned
 

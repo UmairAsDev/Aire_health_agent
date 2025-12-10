@@ -56,7 +56,7 @@ class ProductCategorizationAgent:
         workflow.add_edge("match_category", "suggest_tax_code")
         workflow.add_edge("suggest_tax_code", END)
 
-        return workflow.compile()#type:ignore
+        return workflow.compile()  # type:ignore
 
     async def analyze_product(
         self, product_data: Dict[str, Any]
@@ -95,10 +95,17 @@ class ProductCategorizationAgent:
                 "processing_steps": [],
             }
 
-            final_state = await self.graph.ainvoke(initial_state)#type:ignore
+            final_state = await self.graph.ainvoke(initial_state)  # type:ignore
 
-            for step in final_state.get("processing_steps", []):
-                logger.info(f"   {step}")
+            # Log processing steps (deduplicate to avoid showing accumulated steps)
+            steps = final_state.get("processing_steps", [])
+            unique_steps = []
+            seen = set()
+            for step in steps:
+                if step not in seen:
+                    unique_steps.append(step)
+                    seen.add(step)
+                    logger.info(f"   ✓ {step}")
 
             if final_state.get("errors"):
                 for error in final_state["errors"]:

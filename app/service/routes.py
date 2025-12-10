@@ -38,7 +38,9 @@ async def analyze_product(product: ProductInput):
     try:
         logger.info(f"Received product analysis request for Item: {product.Item_Num}")
 
-        product_data = product.model_dump()
+        product_data = product.model_dump(
+            by_alias=False
+        )  # Use field names, not aliases
 
         agent = await get_agent()
 

@@ -6,12 +6,12 @@ NAME_PATTERN_PROMPT = """You are a product naming expert. Given the following pr
 
 Product Information:
 {product_info}
-
 Extract and format the following components:
 1. Brand name (from vendor information)
 2. Product name (main product identifier)
 3. Size/dimensions (measurements, quantities)
-4. Key specifications (3-4 most important features)
+4. Key specifications (1-2 most important features)
+
 
 Format the name pattern as: [Brand] [Product Name] [Size] - [Key Specs]
 
@@ -36,16 +36,9 @@ Guidelines:
 - Include brand name, product type, certifications, materials, and key specifications
 - DO NOT include price information in the summary
 - Think about what information would be most valuable to potential buyers
+- Be Consistent with response format.
 
-Example format:
-About this Product
 
-• McKesson Confiderm® 3.5C Nitrile Exam Gloves are designed for healthcare professionals requiring superior protection and comfort
-• Powder-Free formulation reduces the risk of allergic reactions and contamination
-• Tested for use with Chemotherapy Drugs using ASTM D6978-05 standard, making them suitable for oncology settings
-• Textured fingertips provide excellent tactile sensitivity and dexterity for precise medical procedures
-• Improved conformability provides superior fit and extended wear comfort during long shifts
-• Beaded cuff design prevents roll-down and makes donning easier
 
 Return ONLY the formatted text with bullet points, nothing else."""
 
@@ -160,7 +153,7 @@ Return as JSON:
 Return ONLY valid JSON, no markdown formatting."""
 
 
-TAX_CODE_SELECTION_PROMPT = """You are a tax classification expert. Select the most appropriate tax code for the following product.
+TAX_CODE_SELECTION_PROMPT = """You are a tax classification expert specializing in medical and pharmaceutical products. Select the MOST ACCURATE tax code for the following product.
 
 Product Information:
 {product_info}
@@ -168,25 +161,27 @@ Product Information:
 Retrieved Tax Categories (from database):
 {tax_categories}
 
-Instructions:
-1. Analyze the product type, description, and intended use
-2. Compare with the retrieved tax category descriptions
-3. Select the best matching tax code
-4. Provide a confidence score (0.0 to 1.0)
-5. Explain your reasoning
+CRITICAL INSTRUCTIONS:
+1. These products are primarily MEDICAL and PHARMACEUTICAL items from dermatology and healthcare departments
+2. Analyze the product description, features, and intended use carefully
+3. Match the product to the tax category that BEST describes its primary function and classification
+4. Consider:
+   - Is it a medical device, pharmaceutical, or medical supply?
+   - What is its primary medical use?
+   - Does it require FDA approval or medical certification?
+   - Is it prescription or over-the-counter?
+   - Is it a diagnostic tool, treatment device, or protective equipment?
 
-Consider:
-- Product type and classification
-- Intended use and application
-- Regulatory requirements
-- Industry standards
+5. Select the tax code with the HIGHEST relevance to the product's actual classification
+6. Provide a confidence score (0.0 to 1.0) - only use high confidence (0.8+) if you're certain
+7. If no perfect match exists, choose the closest category and explain why in reasoning
 
 Return as JSON:
 {{
   "tax_code": "selected_tax_code",
   "tax_code_name": "name of the tax category",
   "confidence": 0.85,
-  "reasoning": "Explanation of why this tax code was selected and confidence level"
+  "reasoning": "Detailed explanation of why this tax code was selected, including the product's primary classification and how it matches the tax category"
 }}
 
 Return ONLY valid JSON, no markdown formatting."""

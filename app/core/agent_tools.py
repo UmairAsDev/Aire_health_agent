@@ -38,11 +38,9 @@ class ProductAgentTools:
         try:
             logger.info("Retrieving tax categories from Qdrant...")
 
-            
             product_info = format_product_for_llm(state["product_data"])
             state["product_info_formatted"] = product_info
 
-            
             results = await self.vector_store.search(
                 collection_name=settings.collection_name,
                 query=product_info,
@@ -81,7 +79,7 @@ class ProductAgentTools:
                 max_tokens=settings.agent_max_tokens,
             )
 
-            name_pattern = response.choices[0].message.content.strip() #type:ignore
+            name_pattern = response.choices[0].message.content.strip()  # type:ignore
             state["name_pattern"] = name_pattern
             state["processing_steps"].append("Generated name pattern")
 
@@ -203,11 +201,12 @@ class ProductAgentTools:
                 response_format={"type": "json_object"},
             )
 
-            keywords_json = parse_llm_json_response(response.choices[0].message.content)#type:ignore
+            keywords_json = parse_llm_json_response(
+                response.choices[0].message.content
+            )  # type:ignore
 
             if keywords_json and "keywords" in keywords_json:
                 keywords = clean_keywords(keywords_json["keywords"])
-
 
                 if not validate_keyword_count(
                     keywords, settings.keyword_count_min, settings.keyword_count_max
@@ -216,7 +215,7 @@ class ProductAgentTools:
                         f"Keyword count {len(keywords)} outside range {settings.keyword_count_min}-{settings.keyword_count_max}"
                     )
                     if len(keywords) < settings.keyword_count_min:
-                        
+
                         keywords.extend(
                             [
                                 f"keyword_{i}"
@@ -272,7 +271,9 @@ class ProductAgentTools:
                 response_format={"type": "json_object"},
             )
 
-            category_json = parse_llm_json_response(response.choices[0].message.content)#type:ignore
+            category_json = parse_llm_json_response(
+                response.choices[0].message.content
+            )  # type:ignore
 
             if category_json and "category" in category_json:
                 state["category"] = category_json["category"]
@@ -332,7 +333,9 @@ class ProductAgentTools:
                 response_format={"type": "json_object"},
             )
 
-            tax_json = parse_llm_json_response(response.choices[0].message.content)#type:ignore
+            tax_json = parse_llm_json_response(
+                response.choices[0].message.content
+            )  # type:ignore
 
             if tax_json:
                 state["tax_code_result"] = TaxCodeResult(

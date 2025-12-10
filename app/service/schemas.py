@@ -3,17 +3,29 @@ from typing import List, Dict, Any, Optional
 
 
 class ProductInput(BaseModel):
-    """Input schema for product analysis"""
+    """Input schema for product analysis request"""
 
-    Item_Num: Optional[int] = Field(None, description="Product item number")
-    Structure_Group: Optional[str] = Field(None, description="Product structure group")
-    Vendor_Abbreviation: Optional[str] = Field(None, description="Vendor abbreviation")
-    Vendor_Name: Optional[str] = Field(None, description="Vendor name")
-    Catalog_Num: Optional[str] = Field(None, description="Catalog number")
-    Item_Desc_Short: Optional[str] = Field(None, description="Short item description")
-    Item_Desc_Full: Optional[str] = Field(None, description="Full item description")
+    Item_Num: Optional[int] = Field(None, alias="Item Num", description="Item number")
+    Structure_Group: Optional[str] = Field(
+        None, alias="Structure Group", description="Product structure group"
+    )
+    Vendor_Abbreviation: Optional[str] = Field(
+        None, alias="Vendor Abbreviation", description="Vendor abbreviation"
+    )
+    Vendor_Name: Optional[str] = Field(
+        None, alias="Vendor Name", description="Vendor name"
+    )
+    Catalog_Num: Optional[str] = Field(
+        None, alias="Catalog Num", description="Catalog number"
+    )
+    Item_Desc_Short: Optional[str] = Field(
+        None, alias="Item Desc Short", description="Short item description"
+    )
+    Item_Desc_Full: Optional[str] = Field(
+        None, alias="Item Desc Full", description="Full item description"
+    )
     UOM: Optional[str] = Field(None, description="Unit of measure")
-    Price: Optional[str] = Field(None, description="Product price")
+    Price: Optional[str] = Field(None, description="Price")
     ITEM_STATUS: Optional[str] = Field(None, description="Item status")
     ITEM_DISCONTINUED: Optional[str] = Field(None, description="Discontinued status")
 
@@ -38,6 +50,7 @@ class ProductInput(BaseModel):
     FEATURES_AND_BENEFITS_19: Optional[str] = None
 
     class Config:
+        populate_by_name = True
         json_schema_extra = {
             "example": {
                 "Item_Num": 1110513,
