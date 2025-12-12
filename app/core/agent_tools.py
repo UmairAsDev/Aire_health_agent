@@ -216,8 +216,8 @@ class ProductAgentTools:
             )
 
             keywords_json = parse_llm_json_response(
-                response.choices[0].message.content
-            )  # type:ignore
+                response.choices[0].message.content  # type:ignore
+            )
 
             if keywords_json and "keywords" in keywords_json:
                 keywords = clean_keywords(keywords_json["keywords"])
@@ -290,8 +290,8 @@ class ProductAgentTools:
             )
 
             category_json = parse_llm_json_response(
-                response.choices[0].message.content
-            )  # type:ignore
+                response.choices[0].message.content  # type:ignore
+            )
 
             if (
                 category_json
@@ -369,8 +369,8 @@ class ProductAgentTools:
             )
 
             tax_json = parse_llm_json_response(
-                response.choices[0].message.content
-            )  # type:ignore
+                response.choices[0].message.content  # type:ignore
+            )
 
             if tax_json:
                 state["tax_code_result"] = TaxCodeResult(
@@ -434,8 +434,8 @@ class ProductAgentTools:
             )
 
             content_json = parse_llm_json_response(
-                response.choices[0].message.content
-            )  # type:ignore
+                response.choices[0].message.content  # type:ignore
+            )
 
             if content_json:
                 # Extract all 4 components
@@ -527,8 +527,8 @@ class ProductAgentTools:
             )
 
             classification_json = parse_llm_json_response(
-                response.choices[0].message.content
-            )  # type:ignore
+                response.choices[0].message.content  # type:ignore
+            )
 
             if classification_json:
                 # Extract category

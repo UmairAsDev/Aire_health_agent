@@ -14,18 +14,23 @@ Generate the following 4 components in JSON format:
    - Format: [Brand] [Product Name] [Size] - [Key Specs]
    - Example: "Allergan Botox Therapeutic 100 Units - Muscle Relaxant"
 
-2. **product_summary**: "About this Product" bullet-point format
-   - Start with "About this Product" header
-   - 6-10 detailed bullet points using "•"
+2. **product_summary**: "About this Product" in html bullet-point format
+   - Start with "About this Product" header in <p> tag.
+   - before bullet points add a Header of product.
+   - 6-10 detailed bullet points using "•" in <li>
    - Focus on features, benefits, specifications
    - DO NOT include price information
    - Be consistent with format
+   - put remaining text in <p> at bottom.
 
 3. **product_description**: Paragraph + HTML table
-   - First: 2-4 sentence descriptive paragraph
+   - First: 2-4 sentence descriptive paragraph in <p>
+   - Prioritise the information presend in the data like FEATURES_AND_BENEFITS for the table.
    - Then: Comprehensive HTML table with specifications
    - Table specs: Brand, Type, Size, Material, Storage, Certifications, etc.
    - Include 10-15+ rows for detailed products
+   - Be consistant with the format.
+   - Do Not add unecessary description in the table.
 
 4. **keywords**: 15-30 short e-commerce keywords
    - 1-3 words each

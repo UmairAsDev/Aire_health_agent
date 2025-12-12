@@ -52,9 +52,9 @@ class ProductAnalysisOutput(TypedDict):
     product_summary: str
     product_description: str
     keywords: List[str]
-    category: Dict[str, Any]  # {"main_category": str, "subcategories": List[str]}
+    category: Dict[str, Any]  
     tax_code: str
     tax_code_name: str
     tax_code_confidence: float
     tax_code_reasoning: str
-    total_tokens: int  # Total tokens used
+    total_tokens: int  
