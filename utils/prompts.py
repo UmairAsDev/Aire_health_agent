@@ -20,7 +20,7 @@ Generate the following 4 components in JSON format:
    - 6-10 detailed bullet points using in <li>
    - Focus on features, benefits, specifications
    - DO NOT include price information
-   - Be consistent with format
+   - Be consistent with format and overall structure
    - put remaining text in <p> at bottom.
 
 3. **product_description**: Paragraph + HTML table
