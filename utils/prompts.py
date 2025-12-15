@@ -14,9 +14,8 @@ Generate the following 4 components in JSON format:
    - Format: [Brand] [Product Name] [Size] - [Key Specs]
    - Example: "Allergan Botox Therapeutic 100 Units - Muscle Relaxant"
 
-2. **product_summary**: "About this Product" in html format
-   - Start with "About this Product" header in <p> tag and bold.
-   - Important content in <p> tag.
+2. **product_summary**: in html format
+   - Start with Important content in <p> tag.
    - before bullet points add a Header of product should be precise and viewable.
    - 6-10 detailed bullet points using in <li>
    - Focus on features, benefits, specifications
