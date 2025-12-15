@@ -21,6 +21,7 @@ Generate the following 4 components in JSON format:
    - Focus on features, benefits, specifications
    - DO NOT include price information
    - Be consistent with format and overall structure
+   - Do not Change the format for any product.
    - put remaining text in <p> at bottom.
 
 3. **product_description**: Paragraph + HTML table
