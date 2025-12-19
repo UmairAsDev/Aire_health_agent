@@ -105,6 +105,7 @@ PART 2: SPECIFICATION TABLE
 - Create a detailed HTML table with ALL relevant product specifications
 - Include as many specifications as available (10-15+ rows is fine for complex products)
 - Use <table>, <tr>, <th>, and <td> tags
+- If FEATURES_AND_BENEFITS are not avaliable in any product. **Generate the description based on the product name and specification avaliable.
 
 SPECIFICATIONS TO INCLUDE (if available):
 - Brand/Manufacturer
@@ -186,7 +187,7 @@ Return as a JSON array:
 Return ONLY valid JSON, no markdown formatting."""
 
 
-CATEGORY_MATCHING_PROMPT = """You are a medical product categorization expert. Match the product to categories from the AVAILABLE CATEGORIES ONLY.
+CATEGORY_MATCHING_PROMPT = """You are a medical product categorization expert. Analyze the product closely to categories from the AVAILABLE CATEGORIES ONLY .
 
 Product Information:
 {product_info}
@@ -211,7 +212,7 @@ SELECTION PROCESS:
 1. Analyze the product's primary medical function
 2. Match to ONE main category from: "Medical Supplies", "Equipment", "Devices & Lasers", or "Injectables"
 3. Select 1-3 relevant subcategories from that category's list
-4. If no subcategories are available, return empty array
+4. If no subcategories are available, return closest possible subcategory.
 
 OUTPUT FORMAT - Return as JSON:
 {{
